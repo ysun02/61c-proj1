@@ -35,6 +35,9 @@ unsigned input_offset;
  * Don't forget to null terminate any string you send. */
 void process_input () {
 	/* YOUR CODE HERE. */
+    while (find_message_end(getc(stdin)) != -1){
+        send_message(getc(stdin))
+	    }
 }
 
 /* Function that takes in a whole message from a server and handles
@@ -53,7 +56,11 @@ void handle_server_message (char *msg) {
                 handle_exit ();
         } else {
 		/* YOUR CODE HERE. */
-        }
+	    char *output = (char *) malloc((strlen(msg)-1)*sizeof(char));
+	    strcpy(output, msg);
+	    display_prefix();
+	    printf(output);
+	}
 }
 
 /* Handles a response from the server telling it to exit. This is the result
