@@ -34,12 +34,23 @@ unsigned input_offset;
  * to use the send_message function that is provided for you in client_utils.h.
  * Don't forget to null terminate any string you send. */
 void process_input () {
-	/* YOUR CODE HERE. */
-    while (find_message_end(getc(stdin)) != -1){
-        send_message(getc(stdin))
-	    }
-}
+    /* YOUR CODE HERE. */
+    while (find_message_end() != -1){
 
+	char *input = generate_message(input_message, find_message_end(input_message, input_offset));
+	if (strlen(input) == 0){
+	    return -1;
+	}
+	else{
+	    while (*input){
+		getc(input);
+	    }
+
+	}
+
+    }
+    send_message();
+    display_prefix();
 /* Function that takes in a whole message from a server and handles
  * it appropriately. A message from a server will have a leading byte that
  * indicates what type of message it is. This will either be a
