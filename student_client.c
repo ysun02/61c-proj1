@@ -2,6 +2,7 @@
  * Author: YOUR NAME HERE */
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -35,22 +36,23 @@ unsigned input_offset;
  * Don't forget to null terminate any string you send. */
 void process_input () {
     /* YOUR CODE HERE. */
-    while (find_message_end() != -1){
-
-	char *input = generate_message(input_message, find_message_end(input_message, input_offset));
-	if (strlen(input) == 0){
-	    return -1;
-	}
-	else{
-	    while (*input){
-		getc(input);
-	    }
-
-	}
-
+    int input_offset = 0;
+    char a=getc(stdin);
+    while (a!=-1 && a!='\n') {
+	*(input_message+input_offset) = a;
+	input_offset++;
+	a = getc(stdin);
     }
-    send_message();
-    display_prefix();
+    if(a=='\n'){
+	input_message[input_offset++] = a;
+	input_message[input_offset]='\0';
+	send_message();
+	display_prefix();
+	input_offset = 0;
+        }
+}
+
+
 /* Function that takes in a whole message from a server and handles
  * it appropriately. A message from a server will have a leading byte that
  * indicates what type of message it is. This will either be a
@@ -67,10 +69,11 @@ void handle_server_message (char *msg) {
                 handle_exit ();
         } else {
 		/* YOUR CODE HERE. */
-	    char *output = (char *) malloc((strlen(msg)-1)*sizeof(char));
-	    strcpy(output, msg);
+	    
+	    msg++;
+
+	    printf("%s", msg);
 	    display_prefix();
-	    printf(output);
 	}
 }
 

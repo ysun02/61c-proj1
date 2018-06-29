@@ -179,11 +179,19 @@ void handle_server_exit (char **args, unsigned count, unsigned n) {
  * or consist of invalid characters, this has already been checked for you.*/
 void handle_set_nickname (char **args, unsigned count, unsigned n) {
 	/* HANDLE ANY POSSIBLE ERROR CONDITIONS */
-
+    if (count!=2 || (!isvalidname(args[1])) ||(!find_user(args[0]))) {
+	handle_invalid_arguments ("set_nickname", n);
+    }
+    else {
 
 	/* IMPLEMENT THE CORE FUNCTIONALITY */
 
-	struct user_info *user = NULL; /* REPLACE ME */
+	struct user_info *user = find_user(args[0]);
+	free(*(user->nickname));
+	*(user->nickname) = (char *)malloc(strlen(args[1])+1);
+	strcpy(*(user->nickname), args[1]);
+	
+	/* REPLACE ME */
 
 	/* WE HANDLE MESSAGE OUTPUT FOR YOU */
 	char *other_messages[6];
@@ -212,6 +220,8 @@ void handle_set_nickname (char **args, unsigned count, unsigned n) {
 
 	/* ANYTHING ELSE THAT NEEDS TO BE DONE? DOES ANYTHING
 	 * NEED TO BE FREED? */
+	
+    }
 }
 
 /* Function to handle the clear_nickname command. It takes in one
@@ -225,11 +235,19 @@ void handle_set_nickname (char **args, unsigned count, unsigned n) {
  * has already been checked for you. */
 void handle_clear_nickname (char **args, unsigned count, unsigned n) {
 	/* HANDLE ANY POSSIBLE ERROR CONDITIONS */
-
+    if(count!=1 || (!find_user(args[0]))){
+	handle_invalid_arguments ("clear_nickname", n);
+    } else {
 
 	/* IMPLEMENT THE CORE FUNCTIONALITY */
 
-	struct user_info *user = NULL; /* REPLACE ME */
+	struct user_info *user = find_user(args[0]); /* REPLACE ME */
+	 
+
+	free(*(user->nickname));
+	*(user->nickname) = (char *)malloc(strlen(args[0])+1);
+	strcpy(*(user->nickname), args[0]);
+	    
 
 	/* WE HANDLE MESSAGE OUTPUT FOR YOU */
 	char *other_messages[4];
@@ -254,8 +272,11 @@ void handle_clear_nickname (char **args, unsigned count, unsigned n) {
 
 	/* ANYTHING ELSE THAT NEEDS TO BE DONE? DOES ANYTHING
 	 * NEED TO BE FREED? */
+	
+	
+    
+    }
 }
-
 /* Function to handle the rename command. It takes one argument which must
  * be a valid name. The user who called the command will have their name
  * changed to the name passed in. Then any attempts to access that user
@@ -268,16 +289,28 @@ void handle_clear_nickname (char **args, unsigned count, unsigned n) {
  * for you.*/
 void handle_rename (char **args, unsigned count, unsigned n) {
 	/* HANDLE ANY POSSIBLE ERROR CONDITIONS */
-
+    if(count!=1 || (!isvalidname(args[0]))){
+	handle_invalid_arguments ("rename", n);
+    } else {
 	/* USEFUL VARIABLES PRESET FOR MESSAGE OUTPUT */
 	char *name = args[0];
 	struct user_info *user = users[n];
 	char *old_name = user->name_info->name;
 
-
 	/* IMPLEMENT THE CORE FUCNTIONALITY */
 
-
+	if(!has_nickname(user)){
+	    free(*(user->nickname));
+	    	    
+	    *(user->nickname) = create_name(name);
+	    
+	    if(*(user->nickname)==NULL){
+		allocation_failed();
+	}
+	    
+	    
+	}
+	user->name_info->name = create_name(name);
 	/* WE HANDLE MESSAGE OUTPUT FOR YOU */
 	char *other_messages[4];
 	other_messages[0] = old_name;
@@ -296,8 +329,10 @@ void handle_rename (char **args, unsigned count, unsigned n) {
 
         /* ANYTHING ELSE THAT NEEDS TO BE DONE? DOES ANYTHING
 	 * NEED TO BE FREED? */
+	free(old_name);
+    }
+    
 }
-
 /* Function to handle the mute command. It takes one argument, a name, which
  * must be the name of an existing user. If the user is not already muted
  * by the user who called the command, set that user to by muted by for the
@@ -308,10 +343,17 @@ void handle_rename (char **args, unsigned count, unsigned n) {
  * command. */
 void handle_mute (char **args, unsigned count, unsigned n) {
 	/* HANDLE ERROR CONDITIONS */
-
+    if(count!=1 || (!find_user(args[0]))){
+	handle_invalid_arguments ("mute", n);
+    } else {
 	/* IMPLEMENT THE CORE FUNCTIONALITY */
-
-
+	struct user_info *user = find_user(args[0]);
+	struct user_info *muter = users[n];
+	if(!ismuted(muter, user)){
+	   
+	   (muter->muted[muter->muted_total])=(user->name_info);
+	   muter->muted_total++;
+	}
 	/* WE HANDLE MESSAGE OUTPUT FOR YOU */
 	char *messages[3];
 	messages[0] = "User ";
@@ -323,8 +365,10 @@ void handle_mute (char **args, unsigned count, unsigned n) {
 
 	/* ANYTHING ELSE THAT NEEDS TO BE DONE? DOES ANYTHING
 	 * NEED TO BE FREED? */
+	
+	
+    }
 }
-
 /* Function to handle the unmute command. It takes one argument, a name, which
  * must be the name of an existing user. If the user is currently muted by the
  * user who called the command. Then that user should resume receiving messages
@@ -334,9 +378,28 @@ void handle_mute (char **args, unsigned count, unsigned n) {
  * or consist of invalid characters, this has already been checked for you.*/
 void handle_unmute (char **args, unsigned count, unsigned n) {
 	/* HANDLE ERROR CONDITIONS */
-
+    if(count!=1 || (!find_user(args[0]))){
+	handle_invalid_arguments ("unmute", n);
+    } else {
+	int i;
 	/* IMPLEMENT THE CORE FUNCTIONALITY */
+	struct user_info *user = users[n];
+	struct user_info *muted = find_user(args[0]);
+	struct name_info **newUser = (struct name_info **)malloc((user->muted_capacity)*sizeof(struct name_info*));
+	if(ismuted(user, muted)){
+	    for(i=0; i<(user->muted_total); i++){
+		if ((user->muted[i]) != muted->name_info){
+		    newUser[i] == muted->name_info; 
+		}
+	    }
+       	    free(user->muted);
+	    user->muted = newUser;
+	    (user->muted_total)--;
+	}
+    
+				      
 
+	
 
 	/* WE HANDLE MESSAGE OUTPUT FOR YOU */
 	char *other_messages[3];
@@ -349,8 +412,9 @@ void handle_unmute (char **args, unsigned count, unsigned n) {
 
 	/* ANYTHING ELSE THAT NEEDS TO BE DONE? DOES ANYTHING
 	 * NEED TO BE FREED? */
+	
+	}
 }
-
 /* Function that handles the show_status command. It takes 1 argument,
  * a name, which must be an existing user. It then display the status
  * of that user to the user who called the command. The function is
@@ -361,8 +425,13 @@ void handle_unmute (char **args, unsigned count, unsigned n) {
  * characters, this has already been checked for you. */
 void handle_show_status (char **args, unsigned count, unsigned n) {
         /* HANDLE ERROR CONDITIONS. */
-
+    if(count!=1 ||(!find_user(args[0]))){
+	handle_invalid_arguments ("show_status", n);
+    } else {
+	struct user_info *user = find_user(args[0]);
+	output_user_status (user, n);
 	/* IMPLEMENT THE CORE FUNCTIONALITY */
+}
 }
 
 /* Function that handles the show_all_statuses command. It returns the status

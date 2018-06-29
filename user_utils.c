@@ -3,6 +3,7 @@
  * Author: YOUR NAME HERE */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include "user_utils.h"
@@ -22,7 +23,9 @@
  * the name copied over. */
 char *create_name (char *name) {
 	/* YOUR CODE HERE. */
-    return NULL;
+    char *nmpt = (char *)malloc(sizeof(char)*(strlen(name)+1));
+    strcpy(nmpt, name);
+    return nmpt;
 }
 
 /* Function that takes in a name and outputs a new name_info
@@ -30,14 +33,17 @@ char *create_name (char *name) {
  * after the function exits. */
 struct name_info *create_name_info (char *name) {
 	/* YOUR CODE HERE */
-    return NULL;
+    struct name_info *NAME_INFO=(struct name_info *)malloc(sizeof(struct name_info));
+    NAME_INFO -> total_tracking = 0;
+    NAME_INFO -> name = create_name(name);
+    return NAME_INFO;
 }
 
 /* Function that takes in a name and outputs a new struct user_info having
  * that name. The struct should be capable or producing correct
  * functionality immediately. You cannot assume that name will remain
  * a valid pointer after the function exits. One important detail about
- * the functionality is that while no user begins with a nickname all
+ * the functionality is that while no user begins with a nickname, all
  * attempts to communicate between two users involves the sender's
  * nickname. If there is no nickname then this
  * value should be the actual name of the user, but the code given 
@@ -48,7 +54,20 @@ struct name_info *create_name_info (char *name) {
  * nickname or the user's name. */
 struct user_info *create_user (char *name) {
 	/* YOUR CODE HERE. */
-	return NULL;
+    struct user_info *USER_INFO = (struct user_info *)malloc(sizeof(struct user_info));
+    USER_INFO -> name_info = create_name_info(name);
+    USER_INFO -> name_info -> total_tracking++;
+    USER_INFO -> nickname = (char **)malloc(sizeof(char *));
+    USER_INFO-> muted = (struct name_info **)malloc(sizeof(struct name_info*));
+    USER_INFO -> muted_capacity = 10;
+    USER_INFO -> muted_total = 0;
+    
+    *(USER_INFO->nickname) = (char *)malloc((strlen(name)+1)*sizeof(char));
+    strcpy(*(USER_INFO->nickname), name);
+    return USER_INFO;
+
+	
+    
 }
 
 /* Function that frees the memory associated with a user. This function
@@ -59,15 +78,28 @@ struct user_info *create_user (char *name) {
  * be freed is that all data must be freed on a proper server exit. */
 void cleanup_user (struct user_info *user) {
 	/* YOUR CODE HERE. */
-}
+    cleanup_name_info(user->name_info);
+    free(*(user->nickname));
+    free(user->nickname);
+    
+    free(user->muted);
+    free(user);
+    
+    }
+    
 
 /* Function that frees the memory assoicated with a name info. The same
  * suggestion about freeing memory as the above function applies here as
  * well. */
 void cleanup_name_info (struct name_info *info) {
 	/* YOUR CODE HERE. */
+    free(info->name);
+    free(info);
+
 }
 
+
+    
 /* Function that takes in a name and determines if it is already a user's
  * name. */
 bool istaken_name (char *name) {
@@ -88,8 +120,15 @@ bool istaken_name (char *name) {
 /* Function that determines if a user has a nickname. */
 bool has_nickname (struct user_info *user) {
 	/* YOUR CODE HERE. */
+    if(strcmp(*(user->nickname), user->name_info->name)==0){
+		
 	return false;
+    }
+    else{
+	return true;
+    }
 }
+
 
 /* Function that takes in a name and determines if a user
  * has it as a nickname. You may find the global variables users,
@@ -103,8 +142,28 @@ bool has_nickname (struct user_info *user) {
  * information yet users[i] will be NULL. */
 bool istaken_nickname (char *name) {
 	/* YOUR CODE HERE. */
-        return false;
+    int i;
+    for(i=1; i< socket_total; i++){
+       	if (sockets[i] != -1){
+	    if(users[i]!=NULL){
+		if(has_nickname(users[i])&&strcmp(*(users[i]->nickname), name)==0){
+		    return true;
+		}
+		else{
+		    return false;
+		}
+	       
+	    }
+	    else{
+		return false;
+	    }
+	}
+	else{
+	    return false;
+	}
+    }
 }
+
 
 /* Function that takes in a name and return the user who has that name as their
  * actual name. Returns NULL is no user has that actual name. */
@@ -128,5 +187,12 @@ struct user_info *find_user (char *name) {
  * user. */
 bool ismuted (struct user_info *receiving_user, struct user_info *possibly_muted_user) {
         /* YOUR CODE HERE. */
-        return false;
+    for(int i=0; i<(receiving_user->muted_total); i++){
+	if(strcmp(receiving_user->muted[i]->name, possibly_muted_user->name_info->name)==0){
+	    return true;
+        }
+	else{
+	    return false;
+}
+    }
 }
